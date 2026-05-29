@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Convegno">
+<title>Agente Convegno</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#fff;--bg2:#f5f5f3;--text:#1a1a18;--text2:#6b6b67;--text3:#a8a8a4;--bd:rgba(0,0,0,.1);--bd2:rgba(0,0,0,.2);--acc:#378ADD;--accl:#E6F1FB;--accd:#185FA5;--red:#E24B4A;--redl:#FCEBEB;--redd:#A32D2D;--grn:#3B6D11;--r:8px;--r2:12px;}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a18;--bg2:#242422;--text:#f0f0ec;--text2:#a0a09c;--text3:#6a6a66;--bd:rgba(255,255,255,.1);--bd2:rgba(255,255,255,.2);--accl:#0c2440;--accd:#85B7EB;--redl:#2e1010;--redd:#f09595;--grn:#97C459;}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;}
+.app{display:flex;flex-direction:column;height:100%;max-width:520px;margin:0 auto;}
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));border-bottom:.5px solid var(--bd);background:var(--bg);flex-shrink:0;}
+.hdr-title{font-size:17px;font-weight:600;}
+.hbtn{padding:6px 8px;border:none;background:none;cursor:pointer;color:var(--text2);border-radius:var(--r);font-size:20px;font-family:inherit;}
+.hbtn:active{background:var(--bg2);}
+/* Tabs */
+.tabs{display:flex;border-bottom:.5px solid var(--bd);background:var(--bg);flex-shrink:0;}
+.tab{flex:1;font-size:13px;padding:10px 8px;border:none;background:none;color:var(--text2);cursor:pointer;border-bottom:2.5px solid transparent;font-family:inherit;position:relative;}
+.tab.on{color:var(--text);border-bottom-color:var(--acc);font-weight:500;}
+.rdot{display:none;width:7px;height:7px;border-radius:50%;background:var(--red);position:absolute;top:8px;right:18px;animation:rdotblink .9s ease-in-out infinite alternate;}
+.rdot.show{display:block;}
+@keyframes rdotblink{from{opacity:.4;}to{opacity:1;}}
+/* Panels */
+.panel{flex:1;overflow-y:auto;padding:16px;padding-bottom:max(20px,env(safe-area-inset-bottom));display:none;}
+.panel.on{display:block;}
+/* Event card */
+.ecard{background:var(--bg2);border:.5px solid var(--bd);border-radius:var(--r2);padding:12px;margin-bottom:12px;}
+.lbl{font-size:10px;color:var(--text3);display:block;margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.inp{width:100%;font-size:14px;padding:8px 10px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);margin-bottom:8px;font-family:inherit;-webkit-appearance:none;}
+.inp:last-child{margin-bottom:0;}.inp::placeholder{color:var(--text3);}.inp:focus{outline:none;border-color:var(--acc);}
+.frow{display:flex;gap:8px;}.frow>div{flex:1;}.frow .inp{margin-bottom:0;}
+/* Speaker */
+.spkrow{display:flex;gap:8px;margin-bottom:12px;}
+.spkrow input{flex:1;font-size:14px;padding:8px 10px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:inherit;-webkit-appearance:none;}
+.spkrow input::placeholder{color:var(--text3);}.spkrow input:focus{outline:none;border-color:var(--acc);}
+.spkrow select{font-size:13px;border:.5px solid var(--bd2);border-radius:var(--r);padding:8px;background:var(--bg);color:var(--text);max-width:85px;font-family:inherit;}
+/* Mic */
+.mic-area{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 0 8px;}
+.mic-btn{width:74px;height:74px;border-radius:50%;border:.5px solid var(--bd2);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;-webkit-appearance:none;}
+.mic-btn.rec{border-color:var(--red);background:var(--redl);}
+.mic-btn i{font-size:28px;color:var(--text2);}
+.mic-btn.rec i{color:var(--redd);}
+.pulse{display:none;position:absolute;width:100%;height:100%;border-radius:50%;border:2px solid var(--red);animation:pulse 1.2s ease-out infinite;opacity:0;}
+.mic-btn.rec .pulse{display:block;}
+@keyframes pulse{0%{transform:scale(1);opacity:.7;}100%{transform:scale(1.55);opacity:0;}}
+.slbl{font-size:12px;color:var(--text2);}
+.slbl.rec{color:var(--redd);}
+/* Mic meter */
+.meter-wrap{width:80%;height:5px;background:var(--bd);border-radius:3px;margin:-2px 0 8px;overflow:hidden;display:none;}
+.meter-bar{height:100%;width:0;border-radius:3px;background:var(--red);transition:width .08s linear;}
+/* Live strip */
+.lstrip{display:none;align-items:center;gap:8px;background:var(--redl);border:.5px solid var(--red);border-radius:var(--r);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--redd);}
+.lstrip.show{display:flex;}
+.lstrip button{background:none;border:none;color:var(--accd);cursor:pointer;font-size:12px;text-decoration:underline;padding:0;font-family:inherit;margin-left:auto;}
+/* Live box */
+.live{background:var(--bg2);border-radius:var(--r);padding:10px 12px;min-height:44px;font-size:13px;color:var(--text3);font-style:italic;margin-bottom:12px;border:.5px solid var(--bd);line-height:1.5;}
+.live.on{color:var(--text);font-style:normal;}
+/* Rec list */
+.slabel{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.sbadge{font-size:10px;color:var(--grn);display:flex;align-items:center;gap:3px;}
+.ritem{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg2);border:.5px solid var(--bd);border-radius:var(--r);margin-bottom:6px;}
+.ritem.draft{border-color:var(--red);background:var(--redl);}
+.rname{font-size:13px;font-weight:500;}
+.rmeta{font-size:11px;color:var(--text3);margin-top:2px;}
+/* Buttons */
+.acts{display:flex;gap:8px;margin-top:12px;}
+.bmain{flex:1;padding:10px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);font-size:13px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;-webkit-appearance:none;}
+.bmain:active{background:var(--bg2);}
+.bsm{padding:10px 13px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);font-size:13px;cursor:pointer;color:var(--text2);font-family:inherit;-webkit-appearance:none;}
+.bsm:active{background:var(--bg2);}
+.ibtn{color:var(--text3);cursor:pointer;padding:4px 5px;border:none;background:none;border-radius:4px;}
+.ibtn:active{color:var(--text);background:var(--bg2);}
+.empty{text-align:center;padding:2rem 1rem;color:var(--text3);font-size:13px;line-height:1.6;}
+/* Desktop split layout */
+.cwrap{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+@media(min-width:768px){
+  .app{max-width:100%;}
+  .tabs{display:none;}
+  .cwrap{flex-direction:row;}
+  .panel{display:block!important;overflow-y:auto;}
+  #p-doc{flex:3;min-width:0;order:1;}
+  #p-rec{flex:2;min-width:260px;order:2;border-left:.5px solid var(--bd);}
+  .mobile-only{display:none!important;}
+  .desktop-only{display:flex!important;}
+  .doc-export-area{display:none!important;}
+  .desktop-rec-header{display:flex!important;}
+}
+@media(max-width:767px){
+  .desktop-rec-header{display:none!important;}
+  .desktop-only{display:none!important;}
+}
+.desktop-rec-header{display:none;align-items:center;justify-content:space-between;padding:10px 16px 0;margin-bottom:-4px;}
+.desktop-rec-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;}
+.live-rec-badge{display:none;align-items:center;gap:5px;font-size:11px;color:var(--redd);font-weight:500;}
+.live-rec-badge.show{display:flex;}
+.desktop-only{display:none;}
+.rec-exports{display:flex;flex-direction:column;gap:8px;padding:12px 0 4px;border-top:.5px solid var(--bd);margin-top:8px;}
+/* Mode toggle */
+.mode-toggle{display:flex;gap:0;margin-bottom:12px;border:.5px solid var(--bd2);border-radius:var(--r);overflow:hidden;}
+.mode-btn{flex:1;padding:9px 8px;border:none;background:var(--bg);font-size:13px;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .15s;}
+.mode-btn.on{background:var(--acc);color:#fff;}
+/* Warn */
+.warn{background:var(--accl);border:.5px solid var(--acc);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--accd);margin-bottom:12px;line-height:1.5;display:none;}
+.warn button{background:none;border:none;color:var(--accd);cursor:pointer;font-size:12px;text-decoration:underline;padding:0;font-family:inherit;}
+/* Overlays */
+.overlay{position:fixed;inset:0;background:var(--bg);z-index:100;display:none;flex-direction:column;}
+.overlay.on{display:flex;}
+.ovhdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));border-bottom:.5px solid var(--bd);}
+.ovhdr h2{font-size:17px;font-weight:600;}
+.ovbody{padding:20px 16px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;}
+.ovsec{display:flex;flex-direction:column;gap:8px;}
+.ovlbl{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;}
+.ovhint{font-size:13px;color:var(--text2);line-height:1.6;}
+.ovhint a{color:var(--acc);}
+.ovhint strong{color:var(--text);font-weight:600;}
+.bacc{width:100%;padding:12px;border:none;border-radius:var(--r);background:var(--acc);color:#fff;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;}
+.ki{width:100%;font-size:14px;padding:9px 10px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:inherit;margin-bottom:8px;}
+.ki:focus{outline:none;border-color:var(--acc);}
+/* Document */
+.devhdr{padding:8px 0 6px;border-bottom:.5px solid var(--bd);margin-bottom:14px;}
+.devname{font-size:16px;font-weight:600;}
+.devmeta{font-size:12px;color:var(--text2);margin-top:2px;}
+.dsec-draft{border:.5px solid var(--red);border-radius:var(--r2);padding:12px;background:var(--redl);margin-bottom:20px;}
+.draft-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.draft-badge{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--redd);}
+.recdot{width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;flex-shrink:0;animation:rdotblink .9s ease-in-out infinite alternate;}
+.dlive{font-size:14px;line-height:1.8;color:var(--text);word-break:break-word;min-height:24px;}
+.dlive .itext{color:var(--text3);}
+.dsec{margin-bottom:20px;padding-bottom:20px;border-bottom:.5px solid var(--bd);}
+.dsec:last-child{border-bottom:none;padding-bottom:8px;}
+.dspkrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.dspk{font-size:13px;font-weight:600;cursor:pointer;}
+.dspk:hover{text-decoration:underline;}
+.spk-edit-wrap{display:flex;align-items:center;gap:6px;flex:1;}
+.spk-edit-inp{font-size:13px;font-weight:600;border:none;border-bottom:1.5px solid var(--acc);background:transparent;color:var(--text);padding:0 2px;outline:none;min-width:80px;max-width:180px;font-family:inherit;}
+.edit-spk-btn{padding:2px 4px;border:none;background:none;color:var(--text3);cursor:pointer;border-radius:4px;opacity:0;transition:opacity .15s;}
+.dsec:hover .edit-spk-btn{opacity:1;}
+.edit-spk-btn:hover{color:var(--acc);background:var(--accl);}
+.dtime{font-size:11px;color:var(--text3);}
+.dpara{font-size:14px;line-height:1.8;margin-bottom:12px;white-space:pre-wrap;}
+.dloading{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+/* Suggestions */
+.suglist{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.sitem{border-left:3px solid var(--acc);padding:8px 10px;background:var(--accl);border-radius:0 var(--r) var(--r) 0;}
+.sitem.done{opacity:.5;border-left-color:var(--bd2);background:var(--bg2);}
+.stext{font-size:13px;line-height:1.5;color:var(--accd);}
+.sitem.done .stext{color:var(--text2);}
+.sacts{display:flex;gap:6px;margin-top:6px;}
+.sbtn{font-size:11px;padding:4px 9px;border:.5px solid var(--acc);border-radius:var(--r);background:none;color:var(--accd);cursor:pointer;font-family:inherit;}
+.sdel{font-size:11px;padding:4px 6px;border:none;background:none;color:var(--text3);cursor:pointer;}
+.sloading{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px;padding:4px 0;}
+.addbtn{font-size:13px;color:var(--acc);background:none;border:.5px dashed var(--acc);border-radius:var(--r);padding:7px 12px;cursor:pointer;width:100%;font-family:inherit;}
+.addbtn.dr{border-color:var(--redd);color:var(--redd);}
+.sinput{margin-bottom:10px;}
+.sta{width:100%;font-size:14px;line-height:1.5;border:.5px solid var(--acc);border-radius:var(--r);padding:8px 10px;background:var(--bg);color:var(--text);resize:vertical;min-height:76px;font-family:inherit;}
+.sta:focus{outline:none;}
+.siacts{display:flex;gap:6px;margin-top:6px;}
+.bss{flex:1;font-size:13px;padding:8px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);cursor:pointer;font-family:inherit;}
+.bsc{font-size:13px;padding:8px 12px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text2);cursor:pointer;font-family:inherit;}
+.dbot{padding:12px 0 4px;border-top:.5px solid var(--bd);margin-top:8px;display:flex;flex-direction:column;gap:8px;}
+/* Correction popup */
+#cp{position:fixed;z-index:200;background:var(--bg);border:.5px solid var(--bd2);border-radius:var(--r2);padding:12px;box-shadow:0 4px 20px rgba(0,0,0,.18);width:280px;}
+.cp-sel{font-size:11px;color:var(--text2);margin-bottom:8px;}
+.cp-inp{width:100%;font-size:14px;padding:8px 10px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:inherit;-webkit-appearance:none;}
+.cp-inp:focus{outline:none;border-color:var(--acc);}
+.cp-acts{display:flex;gap:6px;margin-top:8px;}
+.cp-ok{flex:1;font-size:13px;padding:8px;border:none;border-radius:var(--r);background:var(--acc);color:#fff;cursor:pointer;font-family:inherit;}
+.cp-cancel{font-size:13px;padding:8px 12px;border:.5px solid var(--bd2);border-radius:var(--r);background:none;color:var(--text2);cursor:pointer;font-family:inherit;}
+/* Close event modal */
+#close-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:flex-end;justify-content:center;}
+#close-modal.on{display:flex;}
+.close-sheet{background:var(--bg);border-radius:var(--r2) var(--r2) 0 0;width:100%;max-width:520px;padding:20px 16px;display:flex;flex-direction:column;gap:12px;padding-bottom:max(20px,env(safe-area-inset-bottom));}
+.close-ev-name{font-size:18px;font-weight:600;color:var(--text);}
+.close-ev-meta{font-size:13px;color:var(--text2);margin-top:2px;}
+.close-divider{height:.5px;background:var(--bd);margin:4px 0;}
+.close-step{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);border:.5px solid var(--bd);background:var(--bg2);font-size:13px;color:var(--text2);}
+.close-step.done{border-color:var(--grn);background:#EAF3DE;color:var(--grn);}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;}
+.close-step.done .step-num{background:var(--grn);color:#fff;}
+/* Export modal */
+#exp-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:flex-end;justify-content:center;}
+#exp-modal.on{display:flex;}
+.exp-sheet{background:var(--bg);border-radius:var(--r2) var(--r2) 0 0;width:100%;max-width:520px;padding:16px;display:flex;flex-direction:column;gap:10px;max-height:80vh;}
+.exp-ta{flex:1;min-height:220px;font-family:monospace;font-size:12px;line-height:1.5;border:.5px solid var(--bd2);border-radius:var(--r);padding:10px;resize:none;background:var(--bg2);color:var(--text);}
+/* Toast */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;z-index:600;pointer-events:none;white-space:nowrap;}
+/* Animations */
+.dot span{display:inline-block;animation:blink 1.2s infinite;}
+.dot span:nth-child(2){animation-delay:.2s;}.dot span:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:.2;}40%{opacity:1;}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Settings -->
+<div class="overlay" id="settings">
+  <div class="ovhdr">
+    <h2>Impostazioni</h2>
+    <button class="hbtn" onclick="closeSettings()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="ovbody">
+    <div class="ovsec">
+      <span class="ovlbl">API Key Anthropic</span>
+      <input class="ki" type="password" id="apikey" placeholder="sk-ant-api03-..." autocomplete="off"/>
+      <p class="ovhint">Ottienila su <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys. Salvata solo sul tuo dispositivo.</p>
+      <button class="bacc" onclick="saveKey()">Salva chiave</button>
+    </div>
+    <div class="ovsec">
+      <span class="ovlbl">Motore di trascrizione</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="eng-browser" onclick="setEngine('browser')" style="flex:1;min-width:80px;padding:9px 6px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--acc);color:#fff;font-size:12px;cursor:pointer;font-family:inherit;">Browser</button>
+        <button id="eng-whisper" onclick="setEngine('whisper')" style="flex:1;min-width:80px;padding:9px 6px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">Whisper (OpenAI)</button>
+        <button id="eng-local" onclick="setEngine('local')" style="flex:1;min-width:80px;padding:9px 6px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">LocalAI</button>
+      </div>
+      <div id="whisper-section" style="display:none;margin-top:8px;">
+        <input class="ki" type="password" id="openai-key" placeholder="sk-..." autocomplete="off"/>
+        <p class="ovhint">API Key OpenAI — ottienila su <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a>. ~€0.006/minuto.</p>
+        <button class="bacc" onclick="saveOpenAIKey()">Salva chiave OpenAI</button>
+      </div>
+      <div id="local-section" style="display:none;margin-top:8px;">
+        <input class="ki" type="text" id="local-url" placeholder="http://localhost:8080" value="http://localhost:8080"/>
+        <p class="ovhint">Installa <a href="https://localai.io" target="_blank">LocalAI</a> con backend WhisperX. Trascrizione e diarizzazione completamente locali. Velocità limitata su CPU Intel.</p>
+        <button class="bacc" onclick="saveLocalUrl()">Salva URL</button>
+      </div>
+      <p class="ovhint" id="eng-hint" style="margin-top:4px;">Real-time nel browser. Consigliato: usa Safari/Edge per qualità migliore.</p>
+    </div>
+    <div class="ovsec">
+      <span class="ovlbl">Sensibilità microfono</span>
+      <p class="ovhint">Aumenta per voci basse o ambienti rumorosi.</p>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:12px;color:var(--text3);">Normale</span>
+        <input type="range" id="gain-slider" min="1" max="4" step="0.5" value="1.5" style="flex:1;" oninput="document.getElementById('gain-val').textContent=this.value+'x';">
+        <span style="font-size:12px;color:var(--text3);">Alta</span>
+        <span style="font-size:12px;font-weight:600;min-width:32px;" id="gain-val">1.5x</span>
+      </div>
+      <p class="ovhint" style="font-size:11px;">Il filtro rumore è sempre attivo. La sensibilità amplifica il segnale in ingresso.</p>
+    </div>
+    <div class="ovsec">
+      <span class="ovlbl">Installa come app</span>
+      <p class="ovhint">
+        <strong>iPhone/iPad (Safari):</strong> tocca <i class="ti ti-upload" style="font-size:13px"></i> → "Aggiungi a schermata Home".<br><br>
+        <strong>Android (Chrome):</strong> menu ⋮ → "Aggiungi a schermata Home".<br><br>
+        <strong>Desktop:</strong> icona ⊕ nella barra URL → Installa.
+      </p>
+    </div>
+    <div class="ovsec">
+      <span class="ovlbl">Dati</span>
+      <button class="bmain" style="justify-content:flex-start;gap:8px;" onclick="exportJSON()"><i class="ti ti-download" style="font-size:15px"></i> Backup appunti (JSON)</button>
+      <div style="height:4px"></div>
+      <button class="bmain" style="justify-content:flex-start;gap:8px;color:var(--redd);" onclick="nukeData()"><i class="ti ti-trash" style="font-size:15px"></i> Cancella tutti i dati</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-title">🎙️ Agente Convegno</div>
+  <button class="hbtn" onclick="openSettings()"><i class="ti ti-settings"></i></button>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab on" id="t-rec" onclick="showTab('rec')"><i class="ti ti-microphone" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Registra</button>
+  <button class="tab" id="t-doc" onclick="showTab('doc')"><i class="ti ti-file-text" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Documento<span class="rdot" id="rdot"></span></button>
+</div>
+
+<div class="cwrap">
+<!-- REGISTRA -->
+<div id="p-rec" class="panel on">
+  <div class="desktop-rec-header">
+    <span class="desktop-rec-title">Registra</span>
+    <span class="live-rec-badge" id="desk-rec-badge"><span class="recdot"></span> In registrazione</span>
+  </div>
+  <div class="warn" id="apiw"><i class="ti ti-key" style="font-size:12px"></i> Imposta la API Key nelle <button onclick="openSettings()">impostazioni</button> per l'analisi AI.</div>
+  <div class="warn" id="nosup" style="background:var(--redl);border-color:var(--red);color:var(--redd);">Trascrizione non supportata. Usa Safari su iPhone o Chrome su desktop.</div>
+  <div class="lstrip" id="lstrip"><span class="recdot"></span><span>Registrazione attiva — il documento si aggiorna</span><button class="mobile-only" onclick="showTab('doc')">Vedi ↗</button></div>
+  <div class="mode-toggle">
+    <button class="mode-btn on" id="mode-conv" onclick="setMode('convegno')">🎤 Convegno</button>
+    <button class="mode-btn" id="mode-riun" onclick="setMode('riunione')">👥 Riunione</button>
+  </div>
+  <div class="ecard">
+    <div class="lbl" id="ev-lbl">Evento</div>
+    <input class="inp" type="text" id="ename" placeholder="Nome del convegno..." maxlength="80"/>
+    <div class="frow">
+      <div><div class="lbl">Data</div><input class="inp" type="date" id="edate"/></div>
+      <div><div class="lbl">Luogo</div><input class="inp" type="text" id="eplace" placeholder="Es. Milano" maxlength="40"/></div>
+    </div>
+    <div id="odg-wrap" style="display:none;margin-top:8px;">
+      <div class="lbl">Ordine del giorno</div>
+      <input class="inp" type="text" id="odg" placeholder="Argomenti da trattare..." maxlength="300" style="margin-bottom:0;"/>
+    </div>
+  </div>
+  <div class="spkrow">
+    <input type="text" id="spk" placeholder="Relatore / sessione..." maxlength="60" id="spk"/>
+    <select id="lang"><option value="it-IT">🇮🇹 IT</option><option value="en-US">🇺🇸 EN</option><option value="en-GB">🇬🇧 EN-GB</option><option value="fr-FR">🇫🇷 FR</option><option value="de-DE">🇩🇪 DE</option><option value="es-ES">🇪🇸 ES</option></select>
+  </div>
+  <div class="mic-area">
+    <button class="mic-btn" id="mbtn" onclick="toggle()"><div class="pulse"></div><i class="ti ti-microphone" id="mico"></i></button>
+    <span class="slbl" id="slbl">Premi per registrare</span>
+    <!-- Cambio oratore: inside mic area, always in sight during riunione recording -->
+    <div id="cambio-wrap" style="display:none;width:100%;margin-top:4px;">
+      <button id="cambio-btn" onclick="cambioOratore()" style="width:100%;padding:12px 8px;border:2px solid var(--acc);border-radius:var(--r);background:var(--acc);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <i class="ti ti-user-swap" style="font-size:20px"></i> Cambio oratore
+      </button>
+      <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px;">Salva e passa al prossimo oratore</p>
+    </div>
+  </div>
+  <div class="meter-wrap" id="meter"><div class="meter-bar" id="mbar"></div></div>
+  <!-- Name suggestion banner -->
+  <div id="name-sug" style="display:none;background:var(--accl);border:.5px solid var(--acc);border-radius:var(--r);padding:10px 12px;margin-bottom:10px;font-size:13px;color:var(--accd);line-height:1.5;">
+    <div id="name-sug-text"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button id="name-sug-yes" onclick="acceptRename()" style="flex:1;padding:7px;border:none;border-radius:var(--r);background:var(--acc);color:#fff;font-size:13px;cursor:pointer;font-family:inherit;">✓ Sì, rinomina</button>
+      <button onclick="dismissSug()" style="padding:7px 12px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;">No</button>
+    </div>
+  </div>
+  <div class="live" id="live">La trascrizione appare qui in tempo reale...</div>
+  <div class="slabel">Interventi <span class="sbadge" id="badge"></span></div>
+  <div id="rlist"></div>
+  <div class="acts">
+    <button class="bmain mobile-only" onclick="showTab('doc')"><i class="ti ti-file-text" style="font-size:13px"></i> Documento ↗</button>
+    <button class="bsm" onclick="clrEv()" title="Nuovo evento"><i class="ti ti-refresh" style="font-size:14px"></i></button>
+    <button class="bsm" onclick="clrAll()" title="Cancella"><i class="ti ti-trash" style="font-size:14px"></i></button>
+  </div>
+  <!-- Desktop-only save actions -->
+  <div class="desk-acts" style="display:none;flex-direction:column;gap:8px;margin-top:12px;padding-top:12px;border-top:.5px solid var(--bd);">
+    <button class="bmain" onclick="reanalyzeAll()" style="color:var(--text2);"><i class="ti ti-refresh" style="font-size:13px"></i> Rianalizza tutti con Claude</button>
+    <button class="bmain" onclick="dlTranscription()"><i class="ti ti-download" style="font-size:13px"></i> Scarica trascrizione .txt</button>
+    <button class="bmain" onclick="exportDrive()" style="color:var(--accd);"><i class="ti ti-brand-google-drive" style="font-size:13px"></i> Esporta report in Drive</button>
+    <button class="bmain" onclick="openCloseModal()" style="color:var(--redd);border-color:var(--red);"><i class="ti ti-flag-check" style="font-size:13px"></i> Chiudi evento ed esporta</button>
+  </div>
+  <div class="rec-exports desktop-only" id="rec-exports" style="display:none;">
+    <button class="bmain" onclick="openCloseModal()" style="color:var(--redd);border-color:var(--red);justify-content:center;gap:8px;"><i class="ti ti-flag-check" style="font-size:13px"></i> Chiudi evento ed esporta in Drive</button>
+    <div style="display:flex;gap:8px;">
+      <button class="bmain" onclick="dlTranscription()" style="font-size:12px;justify-content:center;gap:6px;"><i class="ti ti-download" style="font-size:12px"></i> Trascrizione .txt</button>
+      <button class="bmain" onclick="exportDrive()" style="font-size:12px;color:var(--accd);justify-content:center;gap:6px;"><i class="ti ti-brand-google-drive" style="font-size:12px"></i> Report in Drive</button>
+    </div>
+  </div>
+</div>
+
+<!-- DOCUMENTO -->
+<div id="p-doc" class="panel">
+  <div id="dcont"></div>
+  <div id="dclose-wrap" class="mobile-only" style="display:none;padding-top:4px;border-top:.5px solid var(--bd);margin-top:8px;">
+    <button class="bmain" onclick="openCloseModal()" style="justify-content:center;gap:8px;color:var(--redd);border-color:var(--red);">
+      <i class="ti ti-flag-check" style="font-size:14px"></i> Chiudi evento ed esporta in Drive
+    </button>
+  </div>
+  <div class="dbot mobile-only" id="dbot" style="display:none;">
+    <button class="bmain" onclick="dlTranscription()"><i class="ti ti-download" style="font-size:13px"></i> Scarica trascrizione integrale (.txt)</button>
+    <button class="bmain" onclick="exportDrive()" style="color:var(--accd);"><i class="ti ti-brand-google-drive" style="font-size:13px"></i> Esporta report in Drive</button>
+  </div>
+</div>
+
+</div><!-- cwrap -->
+</div><!-- .app -->
+
+<!-- Correction popup -->
+<div id="cp" style="display:none;">
+  <div class="cp-sel">✏️ Sostituisci: <strong id="cp-word"></strong></div>
+  <input class="cp-inp" id="cp-inp" placeholder="Scrivi la correzione..." autocomplete="off"/>
+  <div class="cp-acts">
+    <button class="cp-ok" onclick="applyCorr()">✓ Applica</button>
+    <button class="cp-cancel" onclick="hideCP()">✕</button>
+  </div>
+</div>
+
+<!-- Close event modal -->
+<div id="close-modal">
+  <div class="close-sheet">
+    <div>
+      <div class="close-ev-name" id="cev-name"></div>
+      <div class="close-ev-meta" id="cev-meta"></div>
+    </div>
+    <div class="close-divider"></div>
+    <p style="font-size:13px;color:var(--text2);">Esporta l'evento in Google Drive prima di chiuderlo.</p>
+    <div class="close-step" id="step-tr">
+      <div class="step-num" id="snum-tr">1</div>
+      <div style="flex:1"><div style="font-weight:500;color:var(--text);margin-bottom:2px;">Trascrizione integrale</div><div style="font-size:12px;">Testo audio grezzo, parola per parola</div></div>
+      <button onclick="closeEvExport('tr')" id="btn-tr" style="padding:7px 12px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);font-size:13px;cursor:pointer;font-family:inherit;color:var(--accd);white-space:nowrap;"><i class="ti ti-brand-google-drive" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i>Esporta</button>
+    </div>
+    <div class="close-step" id="step-sy">
+      <div class="step-num" id="snum-sy">2</div>
+      <div style="flex:1"><div style="font-weight:500;color:var(--text);margin-bottom:2px;">Report sintetizzato</div><div style="font-size:12px;">Bullet point elaborati da Claude</div></div>
+      <button onclick="closeEvExport('sy')" id="btn-sy" style="padding:7px 12px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);font-size:13px;cursor:pointer;font-family:inherit;color:var(--accd);white-space:nowrap;"><i class="ti ti-brand-google-drive" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i>Esporta</button>
+    </div>
+    <div class="close-divider"></div>
+    <button class="bmain" id="btn-new-ev" onclick="startNewEvent()" style="justify-content:center;gap:8px;">
+      <i class="ti ti-plus" style="font-size:14px"></i> <span id="btn-new-label">Nuovo evento</span>
+    </button>
+    <button style="padding:8px;border:none;background:none;color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit;" onclick="closeCloseModal()">Annulla — torna al documento</button>
+  </div>
+</div>
+<!-- Export modal -->
+<div id="exp-modal">
+  <div class="exp-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:15px;font-weight:600;" id="exp-title">Testo</span>
+      <button class="hbtn" onclick="closeExp()"><i class="ti ti-x"></i></button>
+    </div>
+    <textarea class="exp-ta" id="exp-ta" readonly></textarea>
+    <button class="bmain" onclick="copyExp()"><i class="ti ti-copy" style="font-size:13px"></i> Copia tutto</button>
+    <p style="font-size:11px;color:var(--text3);text-align:center;">Copia → incolla in Word, Notes o Google Docs</p>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let notes=[], isRec=false, isCapturing=false, interim='', recog=null;
+let draftId=null, addFor=null, intg={}, cpState={}, micOk=false;
+let speakerCounter=0, editingSpkId=null, editingRecId=null;
+let analyzeQueue=Promise.resolve(); // serializes API calls to avoid rate limiting
+let meterCtx=null, meterAn=null, meterAf=null;
+let mediaRec=null, audioChunks=[], recStream=null;
+
+// ── BOOT ───────────────────────────────────────────────────────────────────────
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+document.getElementById('edate').value = new Date().toISOString().split('T')[0];
+if (!SR) document.getElementById('nosup').style.display = 'block';
+else { document.getElementById('nosup').style.display = 'none'; initSR(); }
+
+function boot() {
+  try {
+    const s = localStorage.getItem('cvg7');
+    if (s) {
+      notes = JSON.parse(s).filter(n => !n.draft);
+      const e = notes[0];
+      if (e) {
+        if (e.en) document.getElementById('ename').value = e.en;
+        if (e.ed) document.getElementById('edate').value = e.ed;
+        if (e.ep) document.getElementById('eplace').value = e.ep;
+      }
+    }
+  } catch(e) {}
+  const k = localStorage.getItem('cvg_k');
+  if (k) document.getElementById('apikey').value = k;
+  if (!k) document.getElementById('apiw').style.display = 'block';
+  const oaik=localStorage.getItem('openai_k'); if(oaik) document.getElementById('openai-key').value=oaik;
+  const lurl=localStorage.getItem('local_url'); if(lurl) document.getElementById('local-url').value=lurl;
+  setEngine(getEngine());
+  setMode(getMode());
+  renderAll(); badge();
+  renderDoc();
+}
+function save()  { try { localStorage.setItem('cvg7', JSON.stringify(notes)); } catch(e) {} }
+function getMode(){ return localStorage.getItem('cvg_mode')||'convegno'; }
+function getEngine(){ return localStorage.getItem('cvg_engine')||'browser'; }
+function getOAIKey(){ return localStorage.getItem('openai_k')||''; }
+function setEngine(e){
+  localStorage.setItem('cvg_engine',e);
+  ['browser','whisper','local'].forEach(x=>{
+    const btn=document.getElementById('eng-'+x);
+    if(btn){btn.style.background=e===x?'var(--acc)':'var(--bg)';btn.style.color=e===x?'#fff':'var(--text)';}
+  });
+  document.getElementById('whisper-section').style.display=e==='whisper'?'block':'none';
+  document.getElementById('local-section').style.display=e==='local'?'block':'none';
+  const hints={browser:'Real-time nel browser. Consigliato: usa Safari/Edge per qualità migliore.',whisper:'Registra audio e trascrive con Whisper (OpenAI) al salvataggio. Molto più accurato.',local:'Trascrive e diarizza con LocalAI in locale. Privato, nessun dato inviato. Richiede installazione.'};
+  document.getElementById('eng-hint').textContent=hints[e]||'';
+}
+function saveLocalUrl(){
+  const v=document.getElementById('local-url').value.trim()||'http://localhost:8080';
+  localStorage.setItem('local_url',v); toast('URL LocalAI salvato!');
+}
+function getLocalUrl(){ return localStorage.getItem('local_url')||'http://localhost:8080'; }
+function setMode(m){
+  localStorage.setItem('cvg_mode',m);
+  document.getElementById('mode-conv').classList.toggle('on',m==='convegno');
+  document.getElementById('mode-riun').classList.toggle('on',m==='riunione');
+  document.getElementById('ev-lbl').textContent=m==='riunione'?'Riunione':'Evento';
+  document.getElementById('ename').placeholder=m==='riunione'?'Nome della riunione...':'Nome del convegno...';
+  document.getElementById('spk').placeholder=m==='riunione'?'Partecipante / argomento...':'Relatore / sessione...';
+  document.getElementById('odg-wrap').style.display=m==='riunione'?'block':'none';
+}
+function saveOpenAIKey(){
+  const v=document.getElementById('openai-key').value.trim();
+  if(!v)return alert('Chiave non valida.');
+  localStorage.setItem('openai_k',v); toast('Chiave OpenAI salvata!');
+}
+function badge() { const n=notes.filter(x=>!x.draft).length; document.getElementById('badge').innerHTML = n ? '<i class="ti ti-check" style="font-size:10px"></i> '+n : ''; }
+function getKey(){ return localStorage.getItem('cvg_k')||''; }
+function saveKey(){
+  const v = document.getElementById('apikey').value.trim();
+  if (!v) return alert('Chiave non valida.');
+  localStorage.setItem('cvg_k', v);
+  document.getElementById('apiw').style.display = 'none';
+  closeSettings(); toast('Chiave salvata!');
+}
+function openSettings()  { document.getElementById('settings').classList.add('on'); }
+function closeSettings() { document.getElementById('settings').classList.remove('on'); }
+
+// ── TABS ───────────────────────────────────────────────────────────────────────
+function isDesktop(){ return window.innerWidth>=768; }
+function showTab(t) {
+  if(isDesktop()){ renderDoc(); return; }
+  ['rec','doc'].forEach(x => {
+    document.getElementById('p-'+x).classList.toggle('on', x===t);
+    document.getElementById('t-'+x).classList.toggle('on', x===t);
+  });
+  if (t==='doc') renderDoc();
+}
+
+// ── MIC METER ─────────────────────────────────────────────────────────────────
+function startMeter(stream) {
+  try {
+    meterCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const src = meterCtx.createMediaStreamSource(stream);
+    // Gain node — boosts quiet voices for meter visualization
+    const gainNode = meterCtx.createGain();
+    gainNode.gain.value = parseFloat(document.getElementById('gain-slider')?.value||1.5);
+    // Dynamics compressor — normalizes levels, reduces loud spikes
+    const comp = meterCtx.createDynamicsCompressor();
+    comp.threshold.value=-45; comp.knee.value=30; comp.ratio.value=16;
+    comp.attack.value=0.001; comp.release.value=0.15;
+    meterAn = meterCtx.createAnalyser(); meterAn.fftSize=512;
+    src.connect(gainNode); gainNode.connect(comp); comp.connect(meterAn);
+    document.getElementById('meter').style.display='block';
+    drawMeter();
+  } catch(e){}
+}
+function drawMeter() {
+  if (!meterAn) return;
+  const d=new Uint8Array(meterAn.frequencyBinCount);
+  meterAn.getByteFrequencyData(d);
+  const avg=d.slice(0,40).reduce((a,b)=>a+b,0)/40;
+  const bar=document.getElementById('mbar');
+  if(bar) bar.style.width=Math.min(100,avg*2.5)+'%';
+  meterAf=requestAnimationFrame(drawMeter);
+}
+function stopMeter() {
+  if(meterAf) cancelAnimationFrame(meterAf); meterAf=null; meterAn=null;
+  if(meterCtx){try{meterCtx.close();}catch(e){} meterCtx=null;}
+  document.getElementById('meter').style.display='none';
+  const bar=document.getElementById('mbar'); if(bar) bar.style.width='0';
+}
+
+// ── SPEECH REC ────────────────────────────────────────────────────────────────
+function initSR() {
+  recog = new SR(); recog.continuous=true; recog.interimResults=true;
+  recog.lang = document.getElementById('lang').value;
+  document.getElementById('lang').addEventListener('change', function(){
+    recog.lang=this.value;
+    if(isRec){isRec=false; try{recog.stop();}catch(e){}}
+  });
+  recog.onresult = function(e) {
+    if(!isCapturing) return;
+    let fin=''; interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal) fin+=t; else interim+=t;
+    }
+    const lb=document.getElementById('live');
+    if(fin){const a=(lb.dataset.acc||'')+fin; lb.dataset.acc=a; lb.textContent=a+interim;}
+    else lb.textContent=(lb.dataset.acc||'')+interim;
+    lb.classList.add('on');
+    if(draftId){
+      const n=notes.find(x=>x.id===draftId);
+      if(n){
+        n.text=(lb.dataset.acc||'')+interim;
+        const el=document.getElementById('dlive-'+draftId);
+        if(el) el.innerHTML=esc(lb.dataset.acc||'')+(interim?'<span class="itext"> '+esc(interim)+'</span>':'');
+        else if(document.getElementById('p-doc').classList.contains('on')) renderDoc();
+      }
+    }
+  };
+  recog.onend=function(){if(isRec){try{recog.start();}catch(e){}}};
+  recog.onerror=function(e){
+    if(e.error==='not-allowed'){
+      document.getElementById('slbl').textContent='Permesso negato';
+      isRec=false; isCapturing=false; setMic(false); stopMeter();
+      if(draftId){notes=notes.filter(x=>x.id!==draftId);draftId=null;save();renderAll();badge();}
+    }
+  };
+}
+
+function toggle() { if(!SR) return; if(!isCapturing) startR(); else saveNote(); }
+
+async function startR() {
+  // Acquire mic permission + start meter
+  const audioConstraints={audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}};
+  if(!micOk){
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia(audioConstraints);
+      startMeter(stream);
+      await new Promise(r=>setTimeout(r,200));
+      stream.getTracks().forEach(t=>t.stop());
+      micOk=true;
+    }catch(e){
+      document.getElementById('slbl').textContent='Permesso microfono negato'; return;
+    }
+  } else {
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia(audioConstraints);
+      startMeter(stream);
+      await new Promise(r=>setTimeout(r,200));
+      stream.getTracks().forEach(t=>t.stop());
+    }catch(e){}
+  }
+  recog.lang=document.getElementById('lang').value;
+  const lb=document.getElementById('live');
+  lb.textContent='Sto ascoltando...'; lb.dataset.acc=''; lb.classList.remove('on');
+  interim='';
+  // Start SR fresh each time (on HTTPS permissions are remembered)
+  try{recog.start();}catch(e){
+    try{recog.stop();}catch(e2){}
+    setTimeout(()=>{try{recog.start();}catch(e3){}},300);
+  }
+  isRec=true; isCapturing=true; setMic(true);
+  // Auto-name speaker in riunione mode — always increment
+  if(getMode()==='riunione'){
+    speakerCounter++;
+    document.getElementById('spk').value='Oratore '+speakerCounter;
+  }
+  // Start MediaRecorder for Whisper mode
+  if(getEngine()==='whisper'){
+    try{
+      recStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,channelCount:1}});
+      audioChunks=[];
+      const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'audio/ogg';
+      mediaRec=new MediaRecorder(recStream,{mimeType:mime});
+      mediaRec.ondataavailable=e=>{if(e.data&&e.data.size>0)audioChunks.push(e.data);};
+      mediaRec.start(1000);
+    }catch(e){console.warn('MediaRecorder failed:',e);}
+  }
+  // Create draft note
+  const id=Date.now(); draftId=id;
+  const spk=document.getElementById('spk').value.trim()||'Intervento';
+  const en=document.getElementById('ename').value.trim()||'Convegno';
+  const ed=document.getElementById('edate').value;
+  const ep=document.getElementById('eplace').value.trim();
+  const now=new Date();
+  const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  notes.push({id,spk,text:'',time,en,ed,ep,para:null,err:false,errMsg:'',sugs:[],draft:true});
+  document.getElementById('lstrip').classList.add('show');
+  document.getElementById('rdot').classList.add('show');
+  document.getElementById('desk-rec-badge').classList.add('show');
+  renderAll(); badge();
+}
+
+function stopCapture() {
+  isRec=false; isCapturing=false;
+  try{recog.stop();}catch(e){}
+  stopMeter(); setMic(false);
+  // mediaRec is stopped in saveNote after getting audio
+  document.getElementById('lstrip').classList.remove('show');
+  document.getElementById('rdot').classList.remove('show');
+  document.getElementById('desk-rec-badge').classList.remove('show');
+}
+
+function setMic(r){
+  document.getElementById('mbtn').classList.toggle('rec',r);
+  document.getElementById('mico').className=r?'ti ti-player-stop':'ti ti-microphone';
+  const sl=document.getElementById('slbl');
+  sl.textContent=r?'Premi per fermare e salvare':'Premi per registrare';
+  sl.classList.toggle('rec',r);
+  // Show cambio oratore wrap only during recording in riunione mode
+  const cambioWrap=document.getElementById('cambio-wrap');
+  if(cambioWrap) cambioWrap.style.display=(r&&getMode()==='riunione')?'block':'none';
+  // Also update mic area flex direction when cambio is shown
+  const micArea=document.querySelector('.mic-area');
+  if(micArea) micArea.style.flexDirection='column';
+}
+
+function saveNote(){
+  const lb=document.getElementById('live');
+  const text=((lb.dataset.acc||'')+interim).trim();
+  stopCapture();
+  lb.textContent='La trascrizione appare qui in tempo reale...'; lb.dataset.acc=''; lb.classList.remove('on'); interim='';
+  if(!draftId) return;
+  const n=notes.find(x=>x.id===draftId); draftId=null;
+  if(!n) return;
+  if(!text&&audioChunks.length===0){notes=notes.filter(x=>x.id!==n.id);save();renderAll();badge();return;}
+  n.text=text||'Trascrizione in corso...'; n.draft=false;
+  save(); renderAll(); badge();
+  if(getEngine()==='whisper'&&mediaRec&&audioChunks.length>0){
+    // Stop recorder and transcribe with Whisper
+    n.whisperLoading=true; renderAll();
+    mediaRec.onstop=async()=>{
+      try{
+        const blob=new Blob(audioChunks,{type:mediaRec.mimeType||'audio/webm'});
+        const okey=getOAIKey();
+        if(!okey){n.whisperLoading=false;analyze(n.id);return;}
+        const fd=new FormData();
+        fd.append('file',blob,'audio.webm');
+        fd.append('model','whisper-1');
+        fd.append('language',document.getElementById('lang').value.split('-')[0]);
+        const isLocal=getEngine()==='local';
+        const whisperUrl=isLocal?(getLocalUrl()+'/v1/audio/transcriptions'):'https://api.openai.com/v1/audio/transcriptions';
+        const whisperHeaders=isLocal?{}:{'Authorization':'Bearer '+okey};
+        const r=await fetch(whisperUrl,{method:'POST',headers:whisperHeaders,body:fd});
+        const d=await r.json();
+        if(d.text){n.text=d.text;}
+        n.whisperLoading=false;
+      }catch(e){n.whisperLoading=false;}
+      if(recStream){recStream.getTracks().forEach(t=>t.stop());recStream=null;}
+      audioChunks=[];
+      save(); renderAll(); analyze(n.id);
+    };
+    mediaRec.stop(); mediaRec=null;
+  } else {
+    if(recStream){recStream.getTracks().forEach(t=>t.stop());recStream=null;}
+    audioChunks=[]; mediaRec=null;
+    analyze(n.id);
+  }
+}
+
+// ── CLAUDE API ────────────────────────────────────────────────────────────────
+function analyze(id){
+  // Queue API calls to avoid hitting rate limits when multiple notes are saved quickly
+  analyzeQueue=analyzeQueue
+    .then(()=>_doAnalyze(id))
+    .then(()=>new Promise(r=>setTimeout(r,400))); // 400ms between calls
+}
+
+async function _doAnalyze(id){
+  const n=notes.find(x=>x.id===id); if(!n||n.draft) return;
+  const k=getKey(); if(!k){n.err=true;n.errMsg='API Key mancante';save();renderAll();return;}
+  renderAll();
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',max_tokens:800,
+        system:'Sei un assistente per appunti di convegno. Analizza la trascrizione e scrivi una lista di bullet point in italiano (usa • come simbolo) che coprono il più possibile di quello che è stato detto. Linguaggio diretto e naturale, non formale. Ogni punto è breve ma concreto. Includi dettagli, esempi, numeri, nomi citati. Meglio più punti che perdere contenuto. Rispondi SOLO con i bullet point, nessun titolo né introduzione né backtick.',
+        messages:[{role:'user',content:'Evento: '+n.en+'\nRelatore: '+n.spk+'\nTrascrizione: '+n.text}]
+      })
+    });
+    const d=await r.json();
+    if(!r.ok){n.err=true;n.errMsg=(d.error&&d.error.message)||'HTTP '+r.status;save();renderAll();return;}
+    n.para=(d.content&&d.content[0]&&d.content[0].text||'').trim();
+    n.err=false; n.errMsg='';
+  }catch(e){n.err=true;n.errMsg=e.message||'';}
+  save(); renderAll();
+}
+
+async function intSug(nid,sid){
+  const n=notes.find(x=>x.id===nid); if(!n) return;
+  const s=n.sugs.find(x=>x.id===sid); if(!s) return;
+  const k=getKey(); if(!k){alert('API Key mancante');return;}
+  const key=nid+'_'+sid; intg[key]=true; renderDoc();
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001', max_tokens:400,
+        system:'Integra l\'osservazione nei bullet point esistenti. Linguaggio diretto e naturale. Rispondi SOLO con i bullet point aggiornati (usa • come simbolo), senza titoli né introduzioni né backtick.',
+        messages:[{role:'user',content:'Bullet point attuali:\n'+n.para+'\n\nOsservazione da integrare:\n'+s.text}]
+      })
+    });
+    const d=await r.json();
+    const p=d.content&&d.content[0]&&d.content[0].text;
+    if(p) n.para=p.trim(); s.done=true;
+  }catch(e){}
+  delete intg[key]; save(); renderDoc();
+}
+
+// ── SUGGESTIONS ───────────────────────────────────────────────────────────────
+function openSug(id){addFor=id;renderDoc();setTimeout(()=>{const t=document.getElementById('sta-'+id);if(t)t.focus();},50);}
+function cancelSug(){addFor=null;renderDoc();}
+function addSug(nid){
+  const ta=document.getElementById('sta-'+nid); if(!ta||!ta.value.trim()) return;
+  const n=notes.find(x=>x.id===nid); if(!n) return;
+  n.sugs.push({id:Date.now(),text:ta.value.trim(),done:false});
+  addFor=null; save(); renderDoc();
+}
+function delSug(nid,sid){const n=notes.find(x=>x.id===nid);if(!n)return;n.sugs=n.sugs.filter(s=>s.id!==sid);save();renderDoc();}
+function retryAnalyze(id){const n=notes.find(x=>x.id===id);if(n){n.err=false;n.para=null;save();renderAll();analyze(id);}}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderAll(){
+  renderRec();
+  // On desktop both panels are always visible (CSS), class 'on' is not set on p-doc
+  // On mobile, only render doc if its tab is active
+  if(isDesktop() || document.getElementById('p-doc').classList.contains('on')) renderDoc();
+}
+function renderRec(){
+  const l=document.getElementById('rlist');
+  const drafts=notes.filter(n=>n.draft), settled=notes.filter(n=>!n.draft);
+  if(!drafts.length&&!settled.length){l.innerHTML='<div class="empty">Nessun intervento salvato.</div>';return;}
+  l.innerHTML=[
+    ...drafts.map(n=>'<div class="ritem draft"><div><div class="rname" style="display:flex;align-items:center;gap:6px;"><span class="recdot"></span>'+esc(n.spk)+'</div><div class="rmeta">In registrazione...</div></div></div>'),
+    ...settled.map(n=>'<div class="ritem" style="cursor:pointer;" onclick="scrollToNote('+n.id+')"><div><div class="rname">'+esc(n.spk)+'</div><div class="rmeta">'+n.time+' · '+esc(n.en)+'</div></div><div style="display:flex;align-items:center;gap:6px;">'+(n.para?'<i class="ti ti-check" style="font-size:14px;color:var(--grn)"></i>':n.err?'<i class="ti ti-alert-circle" style="font-size:14px;color:var(--red)"></i>':'<i class="ti ti-loader" style="font-size:14px;color:var(--text3);animation:spin 1s linear infinite"></i>')+'<button class="ibtn" onclick="delN('+n.id+')"><i class="ti ti-x" style="font-size:14px"></i></button></div></div>')
+  ].join('');
+}
+function renderDoc(){
+  const c=document.getElementById('dcont'),b=document.getElementById('dbot');
+  if(!notes.length){c.innerHTML='<div class="empty">Nessun appunto ancora.<br>Vai in "Registra" e inizia.</div>';b.style.display='none';return;}
+  const hasNotes=notes.filter(n=>!n.draft).length>0;
+  b.style.display=hasNotes?'flex':'none';
+  document.getElementById('dclose-wrap').style.display=hasNotes?'block':'none';
+  const re=document.getElementById('rec-exports');
+  if(re) re.style.display=hasNotes?'flex':'none';
+  c.innerHTML=grp(notes).map(g=>'<div><div class="devhdr"><div class="devname">'+esc(g.en)+'</div><div class="devmeta">'+fmt(g.ed)+(g.ep?' · '+esc(g.ep):'')+'</div></div>'+g.ns.map(n=>n.draft?draftSec(n):finalSec(n)).join('')+'</div>').join('');
+}
+function scrollToNote(id){
+  const el=document.getElementById('note-doc-'+id);
+  if(!el) return;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  el.style.transition='outline .1s';
+  el.style.outline='2px solid var(--acc)';
+  el.style.borderRadius='var(--r2)';
+  setTimeout(()=>{el.style.outline='none';},1800);
+}
+function draftSec(n){
+  const ih=addFor===n.id?'<div class="sinput"><textarea class="sta" id="sta-'+n.id+'" placeholder="Aggiungi osservazione mentre il relatore parla..."></textarea><div class="siacts"><button class="bss" onclick="addSug('+n.id+')"><i class="ti ti-check" style="font-size:12px"></i> Aggiungi</button><button class="bsc" onclick="cancelSug()">Annulla</button></div></div>':'<button class="addbtn dr" onclick="openSug('+n.id+')"><i class="ti ti-plus" style="font-size:12px;vertical-align:-2px;margin-right:4px"></i>Aggiungi osservazione ora</button>';
+  const sh=(n.sugs||[]).map(s=>'<div class="sitem"><div class="stext">'+esc(s.text)+'</div><div class="sacts"><button class="sdel" onclick="delSug('+n.id+','+s.id+')"><i class="ti ti-x" style="font-size:12px"></i></button></div></div>').join('');
+  return '<div class="dsec-draft" id="note-doc-'+n.id+'"><div class="draft-hdr"><div class="draft-badge"><span class="recdot"></span> In registrazione · '+esc(n.spk)+'</div><span style="font-size:11px;color:var(--redd)">'+n.time+'</span></div><div class="dlive" id="dlive-'+n.id+'">'+(n.text?esc(n.text):'<span style="color:var(--text3);font-style:italic">In ascolto...</span>')+'</div>'+(sh?'<div class="suglist" style="margin-top:10px;">'+sh+'</div>':'')+'<div style="margin-top:10px;">'+ih+'</div></div>';
+}
+function finalSec(n){
+  let ph;
+  if(n.para) ph='<p class="dpara" data-nid="'+n.id+'" data-field="para" onmouseup="onSel(event)" ontouchend="onSel(event)">'+esc(n.para)+'</p>';
+  else if(n.err) ph='<div style="background:var(--redl);border:.5px solid var(--red);border-radius:var(--r);padding:8px 10px;margin-bottom:12px;font-size:13px;color:var(--redd);">⚠️ '+esc(n.errMsg||'Errore API')+'<button onclick="retryAnalyze('+n.id+')" style="margin-left:8px;font-size:12px;color:var(--acc);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;">Riprova</button><br><span style="font-size:12px;color:var(--text2);font-style:italic;">'+esc(n.text?n.text.slice(0,120)+'...':'')+'</span></div>';
+  else if(n.whisperLoading) ph='<div class="dloading"><i class="ti ti-loader" style="font-size:13px;animation:spin 1s linear infinite"></i> Whisper sta trascrivendo<span class="dot"><span>.</span><span>.</span><span>.</span></span></div>';
+  else ph='<div class="dloading"><i class="ti ti-loader" style="font-size:13px;animation:spin 1s linear infinite"></i> Claude sta elaborando<span class="dot"><span>.</span><span>.</span><span>.</span></span></div>';
+  const sh=(n.sugs||[]).map(s=>{
+    const k=n.id+'_'+s.id;
+    if(intg[k]) return '<div class="sitem"><div class="sloading"><i class="ti ti-loader" style="font-size:13px;animation:spin 1s linear infinite"></i> Integrazione<span class="dot"><span>.</span><span>.</span><span>.</span></span></div></div>';
+    return '<div class="sitem '+(s.done?'done':'')+'"><div class="stext">'+esc(s.text)+'</div>'+(!s.done?'<div class="sacts"><button class="sbtn" onclick="intSug('+n.id+','+s.id+')"><i class="ti ti-wand" style="font-size:11px"></i> Integra</button><button class="sdel" onclick="delSug('+n.id+','+s.id+')"><i class="ti ti-x" style="font-size:12px"></i></button></div>':'<div style="font-size:10px;color:var(--text3);margin-top:4px;"><i class="ti ti-check" style="font-size:11px"></i> Integrato</div>')+'</div>';
+  }).join('');
+  const ih=addFor===n.id?'<div class="sinput"><textarea class="sta" id="sta-'+n.id+'" placeholder="Scrivi osservazione o integrazione..."></textarea><div class="siacts"><button class="bss" onclick="addSug('+n.id+')"><i class="ti ti-check" style="font-size:12px"></i> Aggiungi</button><button class="bsc" onclick="cancelSug()">Annulla</button></div></div>':'<button class="addbtn" onclick="openSug('+n.id+')"><i class="ti ti-plus" style="font-size:12px;vertical-align:-2px;margin-right:4px"></i>Aggiungi osservazione</button>';
+  return '<div class="dsec" id="note-doc-'+n.id+'"><div class="dspkrow"><span class="dspk">'+esc(n.spk)+'</span><span class="dtime">'+n.time+'</span></div>'+ph+(sh?'<div class="suglist">'+sh+'</div>':'')+ih+'</div>';
+}
+
+// ── CORRECTION POPUP ──────────────────────────────────────────────────────────
+function onSel(e){
+  setTimeout(()=>{
+    const sel=window.getSelection(); if(!sel||sel.isCollapsed) return;
+    const text=sel.toString().trim(); if(!text||text.length<2) return;
+    let el=e.target; while(el&&!el.dataset.nid) el=el.parentElement; if(!el) return;
+    const nid=+el.dataset.nid, field=el.dataset.field;
+    const range=sel.getRangeAt(0), rect=range.getBoundingClientRect();
+    const popup=document.getElementById('cp');
+    const pw=280;
+    let left=Math.max(8,Math.min(rect.left,window.innerWidth-pw-8));
+    let top=rect.bottom+8; if(top+160>window.innerHeight) top=rect.top-160;
+    popup.style.left=left+'px'; popup.style.top=top+'px'; popup.style.display='block';
+    document.getElementById('cp-word').textContent=text.length>25?text.slice(0,25)+'…':text;
+    const inp=document.getElementById('cp-inp'); inp.value='';
+    cpState={nid,field,orig:text};
+    setTimeout(()=>inp.focus(),80);
+  },50);
+}
+function applyCorr(){
+  const {nid,field,orig}=cpState;
+  const rep=document.getElementById('cp-inp').value.trim();
+  if(!rep||!nid||!orig){hideCP();return;}
+  const n=notes.find(x=>x.id===nid); if(!n){hideCP();return;}
+  if(field==='para'&&n.para){
+    n.para=n.para.replace(orig,rep);
+  } else if(field==='text'||field==='live'){
+    n.text=n.text.replace(orig,rep);
+    // If this is the active draft, also fix the live accumulator
+    // so new speech appends after the corrected text, not the original
+    if(n.draft&&draftId===nid){
+      const lb=document.getElementById('live');
+      const corrAcc=(lb.dataset.acc||'').replace(orig,rep);
+      lb.dataset.acc=corrAcc;
+      lb.textContent=corrAcc+interim;
+      // Update live div immediately
+      const el=document.getElementById('dlive-'+nid);
+      if(el) el.innerHTML=esc(corrAcc)+(interim?'<span class="itext"> '+esc(interim)+'</span>':'');
+    }
+  }
+  hideCP(); window.getSelection().removeAllRanges(); save(); renderAll();
+}
+function hideCP(){document.getElementById('cp').style.display='none'; cpState={};}
+document.getElementById('cp-inp').addEventListener('keydown',e=>{if(e.key==='Enter')applyCorr();if(e.key==='Escape')hideCP();});
+document.addEventListener('mousedown',e=>{const cp=document.getElementById('cp');if(cp.style.display!=='none'&&!cp.contains(e.target))hideCP();});
+
+// ── SPEAKER CHANGE & NAME DETECTION ──────────────────────────────────────────
+let pendingSug = null; // {noteId, oldName, newName}
+
+function cambioOratore(){
+  if(!isCapturing) return;
+  const lb=document.getElementById('live');
+  const text=((lb.dataset.acc||'')+interim).trim();
+  lb.dataset.acc=''; lb.textContent='Sto ascoltando...'; lb.classList.remove('on');
+  interim='';
+  if(draftId){
+    const n=notes.find(x=>x.id===draftId);
+    if(n){
+      if(text){
+        n.text=text; n.draft=false; save(); renderAll(); badge();
+        analyze(n.id); // queued
+        // detectNames runs after analyze via queue
+        analyzeQueue=analyzeQueue.then(()=>detectNames(n.id)).then(()=>new Promise(r=>setTimeout(r,400)));
+      } else {
+        notes=notes.filter(x=>x.id!==n.id);
+      }
+    }
+  }
+  // New speaker
+  speakerCounter++;
+  const newSpk='Oratore '+speakerCounter;
+  document.getElementById('spk').value=newSpk;
+  // Create new draft
+  const id=Date.now(); draftId=id;
+  const en=document.getElementById('ename').value.trim()||'Riunione';
+  const ed=document.getElementById('edate').value;
+  const ep=document.getElementById('eplace').value.trim();
+  const now=new Date();
+  const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  notes.push({id,spk:newSpk,text:'',time,en,ed,ep,para:null,err:false,errMsg:'',sugs:[],draft:true});
+  save(); renderAll(); badge();
+  toast('→ '+newSpk);
+}
+
+async function detectNames(id){
+  if(getMode()!=='riunione') return;
+  const n=notes.find(x=>x.id===id); if(!n||!n.text||n.text.length<15) return;
+  const k=getKey(); if(!k) return;
+  const recent=notes.filter(x=>!x.draft&&x.id!==id).slice(-3).map(x=>x.spk).join(', ');
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',max_tokens:60,
+        system:'Sei un assistente per riunioni. Analizza il testo e cerca nomi propri che indicano chi ha appena parlato o chi ha parlato prima (es: "grazie Lucia", "ha ragione Marco", "come diceva Anna"). Rispondi ESCLUSIVAMENTE con un oggetto JSON su una riga, senza backtick, senza testo aggiuntivo. Formato: {"a":"nome o null","b":"nome o null"} dove a=oratore corrente, b=oratore precedente.',
+        messages:[{role:'user',content:'Oratori: '+recent+'. Testo: '+n.text.slice(0,250)}]
+      })
+    });
+    const d=await r.json();
+    if(!d.content||!d.content[0]) return;
+    // Robust parsing: strip any non-JSON wrapper
+    let raw=d.content[0].text||'';
+    const match=raw.match(/\{[^}]+\}/);
+    if(!match) return;
+    const res=JSON.parse(match[0]);
+    const nameA=res.a&&res.a!=='null'?res.a.trim():null;
+    const nameB=res.b&&res.b!=='null'?res.b.trim():null;
+    if(nameA&&nameA!==n.spk&&!n.spk.startsWith('Orat')){
+      // Only suggest if current name looks like auto-generated
+    } else if(nameA&&n.spk.startsWith('Orat')){
+      showNameSug(id,n.spk,nameA,'questo intervento');
+    } else if(nameB){
+      const prev=notes.filter(x=>!x.draft&&x.id!==id).slice(-1)[0];
+      if(prev&&prev.spk.startsWith('Orat')&&nameB!==prev.spk){
+        showNameSug(prev.id,prev.spk,nameB,"l'intervento precedente");
+      }
+    }
+  }catch(e){}
+}
+
+function showNameSug(noteId,oldName,newName,which){
+  pendingSug={noteId,oldName,newName};
+  document.getElementById('name-sug-text').innerHTML='💡 Ho rilevato <strong>'+newName+'</strong> in '+which+' — rinominare "'+oldName+'" come "'+newName+'" in tutti gli interventi?';
+  document.getElementById('name-sug').style.display='block';
+}
+
+function acceptRename(){
+  if(!pendingSug) return;
+  const {noteId,oldName,newName}=pendingSug;
+  notes.forEach(n=>{ if(n.spk===oldName) n.spk=newName; });
+  save(); renderAll(); badge();
+  dismissSug();
+  toast('"'+oldName+'" → "'+newName+'" rinominato in tutti gli interventi');
+}
+
+function dismissSug(){
+  document.getElementById('name-sug').style.display='none';
+  pendingSug=null;
+}
+
+// ── FOCUS NOTE IN DOC ─────────────────────────────────────────────────────────
+function reanalyzeAll(){
+  const failed=notes.filter(n=>!n.draft&&(!n.para||n.err));
+  if(!failed.length){toast('Tutti gli interventi sono già elaborati.');return;}
+  failed.forEach(n=>{n.err=false;n.para=null;});
+  save();renderAll();
+  failed.forEach(n=>analyze(n.id));
+  toast('Rianalisi in coda per '+failed.length+' intervento/i...');
+}
+
+function startRecEdit(id, e){
+  if(e) e.stopPropagation();
+  editingRecId=id; renderRec();
+  setTimeout(()=>{ const inp=document.getElementById('redit-'+id); if(inp){inp.focus();inp.select();} },50);
+}
+
+function saveRecSpk(id){
+  const inp=document.getElementById('redit-'+id); if(!inp) return;
+  const newName=inp.value.trim();
+  editingRecId=null;
+  if(!newName){ renderRec(); return; }
+  const n=notes.find(x=>x.id===id); if(!n){ renderRec(); return; }
+  const oldName=n.spk;
+  if(newName===oldName){ renderRec(); return; }
+  const count=notes.filter(x=>x.spk===oldName).length;
+  notes.forEach(x=>{ if(x.spk===oldName) x.spk=newName; });
+  // Also update spk field if this matches current draft
+  if(draftId){ const d=notes.find(x=>x.id===draftId); if(d&&d.spk===oldName) document.getElementById('spk').value=newName; }
+  save(); renderAll(); badge();
+  if(count>1) toast('"'+oldName+'" → "'+newName+'" ('+count+' interventi)');
+}
+
+function editSpk(id){
+  editingSpkId=id; renderDoc();
+  setTimeout(()=>{ const inp=document.getElementById('spk-inp-'+id); if(inp){inp.focus();inp.select();} },50);
+}
+
+function saveSpk(id){
+  const inp=document.getElementById('spk-inp-'+id); if(!inp) return;
+  const newName=inp.value.trim();
+  editingSpkId=null;
+  if(!newName){ renderDoc(); return; }
+  const n=notes.find(x=>x.id===id); if(!n){ renderDoc(); return; }
+  const oldName=n.spk;
+  if(newName===oldName){ renderDoc(); return; }
+  const count=notes.filter(x=>x.spk===oldName).length;
+  notes.forEach(x=>{ if(x.spk===oldName) x.spk=newName; });
+  save(); renderAll(); badge();
+  if(count>1) toast('"'+oldName+'" → "'+newName+'" ('+count+' interventi)');
+}
+
+function updateDraftSpk(){
+  if(!draftId) return;
+  const n=notes.find(x=>x.id===draftId); if(!n) return;
+  const val=document.getElementById('spk').value.trim();
+  n.spk=val||('Oratore '+speakerCounter);
+  // Update live badge in doc panel without full re-render
+  const badge=document.getElementById('draft-spk-'+draftId);
+  if(badge) badge.textContent=n.spk;
+  save();
+}
+
+function focusNote(id, e){
+  if(e) e.stopPropagation();
+  // On mobile, switch to doc tab first
+  if(!isDesktop()) showTab('doc');
+  // Wait for render then scroll
+  setTimeout(()=>{
+    const el=document.getElementById('dsec-'+id);
+    if(!el) return;
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+    // Flash highlight
+    el.style.transition='background .15s';
+    el.style.background='var(--accl)';
+    setTimeout(()=>{ el.style.background=''; },900);
+  },isDesktop()?50:300);
+}
+
+// ── CLOSE EVENT ───────────────────────────────────────────────────────────────
+let closedSteps={tr:false,sy:false};
+
+function openCloseModal(){
+  const raw=notes.filter(n=>!n.draft);
+  if(!raw.length) return;
+  const m=getMode();
+  document.getElementById('btn-new-label').textContent=m==='riunione'?'Nuova riunione':'Nuovo evento';
+  const ev=raw[0];
+  document.getElementById('cev-name').textContent=ev.en||(m==='riunione'?'Riunione':'Evento');
+  document.getElementById('cev-meta').textContent=fmt(ev.ed)+(ev.ep?' · '+ev.ep:'')+' — '+raw.length+' intervento/i';
+  closedSteps={tr:false,sy:false};
+  ['tr','sy'].forEach(k=>{
+    document.getElementById('step-'+k).classList.remove('done');
+    document.getElementById('snum-'+k).innerHTML=k==='tr'?'1':'2';
+    document.getElementById('btn-'+k).disabled=false;
+    document.getElementById('btn-'+k).innerHTML='<i class="ti ti-brand-google-drive" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i>Esporta';
+  });
+  document.getElementById('close-modal').classList.add('on');
+}
+
+function closeCloseModal(){
+  document.getElementById('close-modal').classList.remove('on');
+}
+
+function closeEvExport(type){
+  const raw=notes.filter(n=>!n.draft);
+  if(!raw.length) return;
+  const ev=raw[0];
+  const base=(ev.en||'Evento')+(ev.ed?' — '+fmt(ev.ed):'');
+  const title=base+(type==='tr'?' — Trascrizione':' — Report sintetizzato');
+  const text=type==='tr'?buildTranscription():buildSynthesis();
+  const btn=document.getElementById('btn-'+type);
+  btn.disabled=true; btn.textContent='Copiato...';
+  navigator.clipboard.writeText(text)
+    .then(()=>{
+      window.open('https://docs.google.com/document/create?title='+encodeURIComponent(title),'_blank');
+      markStepDone(type);
+    })
+    .catch(()=>{
+      // Fallback: show in export modal
+      document.getElementById('exp-title').textContent=type==='tr'?'📄 Trascrizione':'📋 Report';
+      document.getElementById('exp-ta').value=text;
+      document.getElementById('exp-modal').classList.add('on');
+      markStepDone(type);
+    });
+}
+
+function markStepDone(type){
+  const step=document.getElementById('step-'+type);
+  step.classList.add('done');
+  document.getElementById('snum-'+type).innerHTML='<i class="ti ti-check" style="font-size:12px"></i>';
+  const btn=document.getElementById('btn-'+type);
+  btn.textContent='✓ Fatto'; btn.disabled=true;
+  closedSteps[type]=true;
+}
+
+function startNewEvent(){
+  speakerCounter=0;
+  document.getElementById('ename').value='';
+  document.getElementById('eplace').value='';
+  document.getElementById('edate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('spk').value='';
+  closeCloseModal();
+  showTab('rec');
+  toast('Nuovo evento pronto. Inserisci i dettagli e inizia a registrare.');
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────────
+function buildTranscription(){
+  return grp(notes.filter(n=>!n.draft)).map(g=>
+    g.en.toUpperCase()+'\n'+fmt(g.ed)+(g.ep?' · '+g.ep:'')+'\n'+'='.repeat(40)+'\n\n'+
+    g.ns.map(n=>'['+n.time+'] '+n.spk+'\n\n'+(n.text||'—')).join('\n\n'+'─'.repeat(40)+'\n\n')
+  ).join('\n\n\n');
+}
+function buildSynthesis(){
+  return grp(notes.filter(n=>!n.draft)).map(g=>
+    g.en.toUpperCase()+'\n'+fmt(g.ed)+(g.ep?' · '+g.ep:'')+'\n'+'='.repeat(40)+'\n\n'+
+    g.ns.map(n=>'['+n.time+'] '+n.spk+'\n\n'+(n.para||n.text||'—')).join('\n\n'+'─'.repeat(40)+'\n\n')
+  ).join('\n\n\n');
+}
+
+function dlTranscription(){
+  const t=buildTranscription();
+  const raw=notes.filter(n=>!n.draft);
+  const fname=((raw[0]?.en||'convegno')+'-'+(raw[0]?.ed||'')+'-trascrizione').replace(/[^a-zA-Z0-9_-]/g,'_')+'.txt';
+  // Try Blob download
+  try{
+    const blob=new Blob([t],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.style.display='none'; a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},3000);
+    toast('Download avviato...');
+    return;
+  }catch(e){}
+  // Fallback: show in modal
+  document.getElementById('exp-title').textContent='📄 Trascrizione integrale';
+  document.getElementById('exp-ta').value=t;
+  document.getElementById('exp-modal').classList.add('on');
+  setTimeout(()=>document.getElementById('exp-ta').select(),100);
+}
+
+function exportDrive(){
+  const t=buildSynthesis();
+  const raw=notes.filter(n=>!n.draft);
+  const title=((raw[0]?.en||'Convegno')+(raw[0]?.ed?' — '+fmt(raw[0].ed):'')).trim();
+  const open=()=>{
+    window.open('https://docs.google.com/document/create?title='+encodeURIComponent(title),'_blank');
+    toast('Testo copiato — incolla in Docs con Cmd+V / Ctrl+V');
+  };
+  navigator.clipboard.writeText(t).then(open).catch(()=>{
+    // Fallback: show in modal
+    document.getElementById('exp-title').textContent='📋 Report sintetizzato';
+    document.getElementById('exp-ta').value=t;
+    document.getElementById('exp-modal').classList.add('on');
+    setTimeout(()=>document.getElementById('exp-ta').select(),100);
+  });
+}
+
+function copyExp(){
+  const ta=document.getElementById('exp-ta'); ta.select();
+  navigator.clipboard.writeText(ta.value).then(()=>toast('Copiato!')).catch(()=>{try{document.execCommand('copy');toast('Copiato!');}catch(e){}});
+}
+function closeExp(){document.getElementById('exp-modal').classList.remove('on');}
+
+function toast(msg){
+  const el=document.createElement('div'); el.className='toast'; el.textContent=msg;
+  document.body.appendChild(el); setTimeout(()=>el.remove(),3200);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function grp(arr){
+  const g={};
+  arr.forEach(n=>{const k=(n.ed||'')+'__'+(n.en||'');if(!g[k])g[k]={en:n.en,ed:n.ed,ep:n.ep,ns:[]};g[k].ns.push(n);});
+  return Object.values(g).sort((a,b)=>(b.ed||'').localeCompare(a.ed||''));
+}
+function fmt(d){if(!d)return '';try{return new Date(d+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});}catch(e){return d;}}
+function delN(id){notes=notes.filter(n=>n.id!==id);save();renderAll();badge();}
+function clrEv(){['ename','eplace','spk'].forEach(i=>document.getElementById(i).value='');document.getElementById('edate').value=new Date().toISOString().split('T')[0];}
+function clrAll(){if(!notes.filter(n=>!n.draft).length)return;if(confirm('Cancellare tutti gli appunti?')){notes=notes.filter(n=>n.draft);save();renderAll();badge();}}
+function nukeData(){if(confirm('Cancellare tutto?')){localStorage.clear();notes=notes.filter(n=>n.draft);document.getElementById('apikey').value='';document.getElementById('apiw').style.display='block';renderAll();badge();closeSettings();}}
+function exportJSON(){const b=new Blob([JSON.stringify(notes.filter(n=>!n.draft),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='convegno-backup.json';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1000);}
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+boot();
+</script>
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Agente%20Convegno%22%2C%22short_name%22%3A%22Convegno%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%23378ADD%22%2C%22start_url%22%3A%22.%22%7D">
+</body>
+</html>
